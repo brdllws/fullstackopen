@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import phonebookService from './services/phonebook' 
 
 
 const Filter = ({ filterText, handleFilter }) => {
@@ -24,11 +24,11 @@ const PersonForm = ({ persons, setPersons }) => {
     const checks = persons.map(person => person.name === newName)
     if (checks.every(elem => elem === false)) {
       const newPerson = {name : newName, number: newNum}      
-      axios
-        .post('http://localhost:3001/persons', newPerson)
-        .then(response => {
-          console.log(response)
-          setPersons(persons.concat(response.data))
+      phonebookService
+        .create(newPerson)
+        .then(resp => {
+          console.log(resp)
+          setPersons(persons.concat(resp))
         })
     }
     else {
@@ -67,10 +67,10 @@ const App = () => {
     setFilterText(event.target.value)
   }
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)
+    phonebookService
+      .getAll()
+      .then(allPersons => {
+        setPersons(allPersons)
       })
   }, [])  
   
