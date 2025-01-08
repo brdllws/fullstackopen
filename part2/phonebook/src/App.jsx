@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+
 
 const Filter = ({ filterText, handleFilter }) => {
   return (
@@ -21,7 +23,7 @@ const PersonForm = ({ persons, setPersons }) => {
     event.preventDefault()
     const checks = persons.map(person => person.name === newName)
     if (checks.every(elem => elem === false)) {
-      setPersons(persons.concat({id: persons[persons.length-1].id + 1, name : newName, phone: newNum}))
+      setPersons(persons.concat({id: persons[persons.length-1].id + 1, name : newName, number: newNum}))
     }
     else {
       alert(`The name ${newName} has already been used`)
@@ -48,18 +50,24 @@ const Persons = ({ persons, filterText }) => {
   const filteredPersons = filterText === '' ? persons : persons.filter(person => person.name.toLowerCase().includes(filterText.toLowerCase()))
 
   return (
-    filteredPersons.map(person => <p key={person.id}>{person.name} : {person.phone}</p>)
+    filteredPersons.map(person => <p key={person.id}>{person.name} : {person.number}</p>)
   )
 }
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { id: 0, name: 'Arto Hellas', phone: "123-456-7890" }
-  ])   
+  const [persons, setPersons] = useState([])   
   const [filterText, setFilterText] = useState('')  
   const handleFilter = (event) => {
     setFilterText(event.target.value)
-  }  
+  }
+  useEffect(() => {
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response => {
+        setPersons(response.data)
+      })
+  }, [])
+  
   
   return (
     <div>
