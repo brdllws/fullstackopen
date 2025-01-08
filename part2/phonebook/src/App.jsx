@@ -23,7 +23,13 @@ const PersonForm = ({ persons, setPersons }) => {
     event.preventDefault()
     const checks = persons.map(person => person.name === newName)
     if (checks.every(elem => elem === false)) {
-      setPersons(persons.concat({id: persons[persons.length-1].id + 1, name : newName, number: newNum}))
+      const newPerson = {name : newName, number: newNum}      
+      axios
+        .post('http://localhost:3001/persons', newPerson)
+        .then(response => {
+          console.log(response)
+          setPersons(persons.concat(response.data))
+        })
     }
     else {
       alert(`The name ${newName} has already been used`)
@@ -66,8 +72,7 @@ const App = () => {
       .then(response => {
         setPersons(response.data)
       })
-  }, [])
-  
+  }, [])  
   
   return (
     <div>
