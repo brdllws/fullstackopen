@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import phonebookService from './services/phonebook' 
+import phonebookService from './services/phonebook'
+import './index.css'
 
 
 const Filter = ({ filterText, handleFilter }) => {
@@ -10,7 +11,19 @@ const Filter = ({ filterText, handleFilter }) => {
   )
 }
 
-const PersonForm = ({ persons, setPersons }) => {
+const Notification = ({ message, status }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className={status}>
+      {message}
+    </div>
+  )
+}
+
+const PersonForm = ({ persons, setPersons, setNotifMessage, setShowNotification, setNotifStatus }) => {
   const [newName, setNewName] = useState('')
   const [newNum, setNewNum] = useState('')
   const handleNewName = (event) => {
@@ -32,7 +45,15 @@ const PersonForm = ({ persons, setPersons }) => {
             const newArr = persons.filter(pers => pers.id !== person.id)            
             setPersons(newArr.concat(upd))
           })
-      }
+          .catch(error => {
+            console.log(error)
+            setNotifMessage(`${upd.name} has already been removed from the server`)
+            setPersons(persons.filter(pers => pers.id !== upd.id))
+            setNotifStatus('error')
+            setShowNotification(true)
+            setTimeout(() => setShowNotification(false), 5000)
+          })
+      }      
     }
     else {
       const newPerson = {name : newName, number: newNum}      
@@ -42,6 +63,9 @@ const PersonForm = ({ persons, setPersons }) => {
           console.log(resp)
           setPersons(persons.concat(resp))
         })
+      setNotifMessage(`${newPerson.name} added to phonebook`)
+      setShowNotification(true)
+      setTimeout(() => setShowNotification(false), 5000)
     }
     setNewName('')
     setNewNum('')
@@ -87,7 +111,10 @@ const Persons = ({ persons, setPersons, filterText }) => {
 
 const App = () => {
   const [persons, setPersons] = useState([])   
-  const [filterText, setFilterText] = useState('')  
+  const [filterText, setFilterText] = useState('')
+  const [showNotification, setShowNotification] = useState(false)
+  const [notifMessage, setNotifMessage] = useState('')
+  const [notifStatus, setNotifStatus] = useState('success')
   const handleFilter = (event) => {
     setFilterText(event.target.value)
   }
@@ -102,9 +129,10 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      { showNotification ? <Notification message={notifMessage} status={notifStatus} /> : null }
       <Filter filterText={filterText} handleFilter={handleFilter} />      
       <h2>Add new</h2>
-      <PersonForm persons={persons} setPersons={setPersons}/>      
+      <PersonForm persons={persons} setPersons={setPersons} setNotifMessage={setNotifMessage} setShowNotification={setShowNotification} setNotifStatus={setNotifStatus} />      
       <h2>Numbers</h2>
       <Persons persons={persons} setPersons={setPersons} filterText={filterText} />      
     </div>
