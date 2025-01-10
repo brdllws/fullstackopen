@@ -21,8 +21,20 @@ const PersonForm = ({ persons, setPersons }) => {
   }
   const addName = (event) => {
     event.preventDefault()
-    const checks = persons.map(person => person.name === newName)
-    if (checks.every(elem => elem === false)) {
+    const person = persons.find(person => person.name === newName)
+    if (person) {
+      if (window.confirm(`${newName} is already in phonebook, do you want to update their number?`)) {
+        const upd = {...person, number: newNum}
+        phonebookService
+          .update(upd.id, upd)
+          .then(resp => {
+            console.log(resp)
+            const newArr = persons.filter(pers => pers.id !== person.id)            
+            setPersons(newArr.concat(upd))
+          })
+      }
+    }
+    else {
       const newPerson = {name : newName, number: newNum}      
       phonebookService
         .create(newPerson)
@@ -30,9 +42,6 @@ const PersonForm = ({ persons, setPersons }) => {
           console.log(resp)
           setPersons(persons.concat(resp))
         })
-    }
-    else {
-      alert(`The name ${newName} has already been used`)
     }
     setNewName('')
     setNewNum('')
@@ -52,11 +61,27 @@ const PersonForm = ({ persons, setPersons }) => {
   )
 }
 
-const Persons = ({ persons, filterText }) => {
+const Persons = ({ persons, setPersons, filterText }) => {
   const filteredPersons = filterText === '' ? persons : persons.filter(person => person.name.toLowerCase().includes(filterText.toLowerCase()))
 
+  const deletePerson = (person) => {
+    if (window.confirm(`Delete ${person.name}?`)) {
+      phonebookService
+      .del(person.id)
+      .then(response => {
+        console.log(response)
+        setPersons(persons.filter(pers => pers.id !== person.id))
+      })
+    }
+  }
+
   return (
-    filteredPersons.map(person => <p key={person.id}>{person.name} : {person.number}</p>)
+    filteredPersons.map(person =>
+      <div key={person.id}>
+        <p> {person.name} : {person.number} </p>
+        <button onClick={() => deletePerson(person)}>delete</button>
+      </div>
+    )
   )
 }
 
@@ -81,7 +106,7 @@ const App = () => {
       <h2>Add new</h2>
       <PersonForm persons={persons} setPersons={setPersons}/>      
       <h2>Numbers</h2>
-      <Persons persons={persons} filterText={filterText} />      
+      <Persons persons={persons} setPersons={setPersons} filterText={filterText} />      
     </div>
   )
 }
