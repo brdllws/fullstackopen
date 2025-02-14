@@ -1,6 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
 const app = express()
 
@@ -45,7 +47,9 @@ let persons = [
 ]
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+  Person.find({}).then(person => {
+    response.json(person)
+  })
 })
 
 app.get('/info', (request, response) => {
@@ -71,16 +75,17 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 app.post('/api/persons', (request, response) => {
-    const newPerson = request.body
-    if (!newPerson.name || !newPerson.number) {
+    const body = request.body
+    if (!body.name || !body.number) {
         return response.status(400).json({ error: 'missing name and/or number' })        
     }
-    if ((persons.filter(p => p.name === newPerson.name)).length > 0) {
-        return response.status(400).json({ error: 'name already exists' })
-    }
-    newPerson.id = String(Math.floor(Math.random()*100000))
-    persons = persons.concat(newPerson)
-    response.json(newPerson)
+    const person = new Person({
+      name: body.name,
+      number: body.number,
+    })
+    person.save().then(savedPerson => {
+      response.json(savedPerson)
+    })
 })
 
 const unknownEndpoint = (request, response) => {
